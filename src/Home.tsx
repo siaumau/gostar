@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import  { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 
 interface Repository {
@@ -21,19 +21,19 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [timeRange, setTimeRange] = useState('month');
-  const sliderRef = useRef<HTMLDivElement>(null);
+  // const sliderRef = useRef<HTMLDivElement>(null);
 
-  const slideLeft = () => {
-    if (sliderRef.current) {
-      sliderRef.current.scrollBy({ left: -300, behavior: 'smooth' });
-    }
-  };
+  // const slideLeft = () => {
+  //   if (sliderRef.current) {
+  //     sliderRef.current.scrollBy({ left: -300, behavior: 'smooth' });
+  //   }
+  // };
 
-  const slideRight = () => {
-    if (sliderRef.current) {
-      sliderRef.current.scrollBy({ left: 300, behavior: 'smooth' });
-    }
-  };
+  // const slideRight = () => {
+  //   if (sliderRef.current) {
+  //     sliderRef.current.scrollBy({ left: 300, behavior: 'smooth' });
+  //   }
+  // };
 
   useEffect(() => {
     const fetchTopRepositories = async () => {
