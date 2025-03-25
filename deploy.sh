@@ -5,7 +5,7 @@ REPO_URL="https://github.com/siaumau/gostar"
 PROJECT_DIR="/opt/myapp"
 IMAGE_NAME="myapp-image"
 CONTAINER_NAME="myapp-container"
-CONTAINER_PORT=3000
+CONTAINER_PORT=4173
 HOST_PORT=80
 
 # === 開始部署 ===
