@@ -48,6 +48,30 @@ npm run build
 yarn build
 ```
 
+### 部署注意事項
+
+#### Windows 用戶注意事項
+
+如果您在 Windows 環境下編輯部署腳本（如 `deploy.sh`），可能會遇到以下錯誤：
+
+```bash
+-bash: ./deploy.sh: /bin/bash^M: bad interpreter: No such file or directory
+```
+
+這是因為 Windows 和 Unix/Linux 系統使用不同的換行符號所導致。要解決這個問題，您可以：
+
+1. 使用以下命令修復腳本：
+```bash
+sed -i 's/\r//' deploy.sh
+```
+
+2. 確保腳本具有執行權限：
+```bash
+chmod +x deploy.sh
+```
+
+建議在編輯部署腳本時使用支援 Unix 風格換行符號（LF）的編輯器，或在編輯器中將檔案格式設定為 "LF" 而非 "CRLF"。
+
 ## 授權
 
 MIT
