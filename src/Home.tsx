@@ -1,4 +1,4 @@
-import  { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
 
 interface Repository {
@@ -29,6 +29,7 @@ export default function Home() {
     return saved ? parseInt(saved) : 12;
   });
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const carouselRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleResize = () => {
@@ -67,7 +68,7 @@ export default function Home() {
       if (!response.ok) throw new Error('獲取資料失敗');
       const data = await response.json();
       setRepositories(data.items);
-      setCurrentPage(1); // 重置到第一頁
+      setCurrentPage(1);
     } catch (err) {
       setError(err instanceof Error ? err.message : '發生錯誤');
     } finally {
@@ -99,6 +100,13 @@ export default function Home() {
     setCurrentPage(1);
   };
 
+  const scrollCarousel = (direction: 'left' | 'right') => {
+    if (carouselRef.current) {
+      const scrollAmount = direction === 'left' ? -carouselRef.current.offsetWidth : carouselRef.current.offsetWidth;
+      carouselRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
+
   // 計算分頁
   const totalPages = Math.ceil(repositories.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -122,163 +130,225 @@ export default function Home() {
     'C++': 'bg-blue-800',
   };
 
+  const renderRepository = (repo: Repository) => (
+    <div key={repo.id} className="bg-gray-800 border border-gray-700 rounded-lg shadow-lg flex flex-col min-w-full sm:min-w-0">
+      <div className="p-6 border-b border-gray-700">
+        <div className="flex items-center gap-4">
+          <img
+            src={repo.owner.avatar_url}
+            alt={repo.owner.login}
+            className="h-16 w-16 rounded-full border-2 border-blue-500 shadow-lg"
+          />
+          <div>
+            <p className="text-blue-400 text-lg mb-1">{repo.owner.login}</p>
+            <h3 className="text-2xl font-bold text-white">{repo.name}</h3>
+          </div>
+        </div>
+      </div>
+      <div className="p-6 flex-1 flex flex-col">
+        <p className="text-lg text-gray-300 mb-6 line-clamp-3">{repo.description || '此專案沒有描述'}</p>
+        <div className="mt-auto space-y-3">
+          {repo.language && (
+            <div className="flex items-center gap-2">
+              <span className={`w-3 h-3 rounded-full ${languageColors[repo.language] || 'bg-gray-700'}`}></span>
+              <span className="text-gray-300">{repo.language}</span>
+            </div>
+          )}
+          <div className="flex flex-wrap gap-4 text-sm">
+            <span className="flex items-center gap-2">
+              <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+              </svg>
+              <span className="text-blue-300">{repo.forks_count} Forks</span>
+            </span>
+            <span className="flex items-center gap-2">
+              <svg className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+              <span className="text-yellow-300">{repo.stargazers_count}</span>
+            </span>
+          </div>
+        </div>
+      </div>
+      <a
+        href={repo.html_url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block bg-gradient-to-r from-blue-600 to-blue-700 text-center py-4 rounded-b text-lg font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-300"
+      >
+        查看專案
+      </a>
+    </div>
+  );
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white py-10 px-4">
       <div className="max-w-7xl mx-auto">
         <header className="text-center mb-12">
-          <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
+          <h1 className="text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500 mb-4">
             GitHub 趨勢排行
           </h1>
-          <p className="text-gray-400 mt-4">探索 GitHub 最熱門的開源專案，掌握最新趨勢</p>
+          <p className="text-xl text-gray-400">探索 GitHub 最熱門的開源專案，掌握最新趨勢</p>
         </header>
 
         <div className="flex flex-col sm:flex-row justify-center gap-4 mb-10">
-          <div className="flex justify-center gap-2">
+          <div className="flex justify-center gap-2 flex-wrap">
             {['day', 'week', 'month', 'year'].map((range) => (
               <button
                 key={range}
                 onClick={() => setTimeRange(range)}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-all border ${
+                className={`px-6 py-3 rounded-lg text-base font-medium transition-all border-2 ${
                   {
-                    day: 'border-blue-500',
-                    week: 'border-green-500',
-                    month: 'border-purple-500',
-                    year: 'border-orange-500',
+                    day: 'border-blue-500 hover:bg-blue-500/20',
+                    week: 'border-green-500 hover:bg-green-500/20',
+                    month: 'border-purple-500 hover:bg-purple-500/20',
+                    year: 'border-orange-500 hover:bg-orange-500/20',
                   }[range]
-                } ${timeRange === range ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}
+                } ${
+                  timeRange === range
+                    ? `bg-gradient-to-r ${
+                      {
+                        day: 'from-blue-600 to-blue-700',
+                        week: 'from-green-600 to-green-700',
+                        month: 'from-purple-600 to-purple-700',
+                        year: 'from-orange-600 to-orange-700',
+                      }[range]
+                    } text-white`
+                    : 'bg-gray-800/50 text-gray-300'
+                }`}
               >
                 {range === 'day' ? '今日' : range === 'week' ? '本週' : range === 'month' ? '本月' : '今年'}
               </button>
             ))}
           </div>
-          <div className="relative flex gap-2">
+          <div className="flex w-full sm:w-auto">
             <input
               type="text"
               placeholder="搜尋專案名稱、描述或作者..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               onKeyPress={handleKeyPress}
-              className="w-full sm:w-96 px-4 py-2 rounded-md bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+              className="flex-1 px-6 py-3 rounded-l-lg bg-gray-800/50 border-2 border-r-0 border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 text-lg"
             />
             <button
               onClick={handleSearch}
-              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2"
+              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-r-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 flex items-center gap-2 text-lg font-medium border-2 border-l-0 border-transparent"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
-              搜尋
+              <span className="hidden sm:inline">搜尋</span>
             </button>
           </div>
         </div>
 
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center gap-2">
-            <span className="text-gray-400">每頁顯示：</span>
-            <select
-              value={itemsPerPage}
-              onChange={handleItemsPerPageChange}
-              className="bg-gray-800 border border-gray-700 text-white rounded-md px-3 py-1 focus:outline-none focus:border-blue-500"
-            >
-              {isMobile ? (
-                <>
-                  <option value="4">4 個</option>
-                  <option value="8">8 個</option>
-                  <option value="12">12 個</option>
-                </>
-              ) : (
-                <>
-                  <option value="8">8 個</option>
-                  <option value="12">12 個</option>
-                  <option value="16">16 個</option>
-                  <option value="24">24 個</option>
-                </>
-              )}
-            </select>
+        {!isMobile && (
+          <div className="flex justify-between items-center mb-8">
+            <div className="flex items-center gap-3">
+              <span className="text-gray-400 text-lg">每頁顯示：</span>
+              <select
+                value={itemsPerPage}
+                onChange={handleItemsPerPageChange}
+                className="bg-gray-800/50 border-2 border-gray-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500 text-lg"
+              >
+                <option value="8">8 個</option>
+                <option value="12">12 個</option>
+                <option value="16">16 個</option>
+                <option value="24">24 個</option>
+              </select>
+            </div>
+            <div className="text-gray-400 text-lg">
+              共 {repositories.length} 個專案
+            </div>
           </div>
-          {/* <div className="text-gray-400">
-            共 {repositories.length} 個專案
-          </div> */}
-        </div>
+        )}
 
         {loading && (
-          <div className="flex justify-center items-center h-40">
-            <div className="animate-spin h-10 w-10 border-4 border-white border-t-transparent rounded-full"></div>
-            <span className="ml-4 text-lg text-gray-300">載入中...</span>
+          <div className="flex justify-center items-center h-60">
+            <div className="animate-spin h-16 w-16 border-4 border-blue-500 border-t-transparent rounded-full"></div>
+            <span className="ml-6 text-2xl text-gray-300">載入中...</span>
           </div>
         )}
 
         {error && (
-          <div className="bg-red-100 text-red-800 rounded p-4 text-center max-w-xl mx-auto">
+          <div className="bg-red-500/10 border-2 border-red-500 text-red-400 rounded-lg p-6 text-center max-w-xl mx-auto text-lg">
             <p>{error}</p>
           </div>
         )}
 
         {!loading && !error && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {currentRepositories.map((repo) => (
-              <div key={repo.id} className="bg-gray-800 border border-gray-700 rounded-lg shadow-lg flex flex-col">
-                <div className="p-4 border-b border-gray-700">
-                  <div className="flex items-center gap-3">
-                    <img src={repo.owner.avatar_url} alt={repo.owner.login} className="h-10 w-10 rounded-full border-2 border-blue-500" />
-                    <div>
-                      <p className="text-sm text-blue-400">{repo.owner.login}</p>
-                      <h3 className="text-lg font-bold text-white">{repo.name}</h3>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-4 flex-1 flex flex-col">
-                  <p className="text-sm text-gray-300 mb-4 line-clamp-3">{repo.description || '此專案沒有描述'}</p>
-                  <div className="mt-auto flex flex-wrap gap-2 text-xs">
-                    {repo.language && (
-                      <span className={`px-2 py-1 rounded ${languageColors[repo.language] || 'bg-gray-700'} text-white`}>{repo.language}</span>
-                    )}
-                    <span className="px-2 py-1 rounded bg-blue-900 text-blue-300 border border-blue-700">Forks: {repo.forks_count}</span>
-                    <span className="px-2 py-1 rounded bg-yellow-600 text-white">⭐ {repo.stargazers_count}</span>
-                  </div>
-                </div>
-                <a
-                  href={repo.html_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block bg-blue-600 text-center py-2 rounded-b hover:bg-blue-700 transition font-medium"
+          <div className="relative">
+            {isMobile && (
+              <>
+                <button
+                  onClick={() => scrollCarousel('left')}
+                  className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 bg-gray-800/80 rounded-full p-3 text-white hover:bg-gray-700 transition-colors"
                 >
-                  查看專案
-                </a>
-              </div>
-            ))}
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => scrollCarousel('right')}
+                  className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 bg-gray-800/80 rounded-full p-3 text-white hover:bg-gray-700 transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </>
+            )}
+            <div
+              ref={carouselRef}
+              className={`
+                ${isMobile ? 'flex overflow-x-auto snap-x snap-mandatory hide-scrollbar' : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'}
+                gap-6
+              `}
+            >
+              {currentRepositories.map((repo) => (
+                <div key={repo.id} className={`${isMobile ? 'snap-center w-full flex-shrink-0' : ''}`}>
+                  {renderRepository(repo)}
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
         {!loading && !error && repositories.length === 0 && (
-          <div className="text-center text-gray-400 py-10">
-            <p>沒有找到符合搜尋條件的專案</p>
+          <div className="text-center text-gray-400 py-16">
+            <p className="text-xl">沒有找到符合搜尋條件的專案</p>
           </div>
         )}
 
-        {!loading && !error && repositories.length > 0 && (
-          <div className="flex justify-center items-center gap-2 mt-8">
+        {!loading && !error && repositories.length > 0 && !isMobile && (
+          <div className="flex justify-center items-center gap-4 mt-12">
             <button
               onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
-              className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-lg"
             >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
               上一頁
             </button>
-            <span className="text-gray-400">
+            <span className="text-gray-400 text-lg">
               第 {currentPage} 頁，共 {totalPages} 頁
             </span>
             <button
               onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
               disabled={currentPage === totalPages}
-              className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-lg"
             >
               下一頁
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
             </button>
           </div>
         )}
 
-        <footer className="mt-16 text-center text-sm text-gray-500">
+        <footer className="mt-16 text-center text-base text-gray-500">
           使用 GitHub API 獲取資料 • 老胖克設計與開發 © {new Date().getFullYear()}
         </footer>
       </div>
