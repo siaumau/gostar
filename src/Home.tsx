@@ -131,38 +131,38 @@ export default function Home() {
   };
 
   const renderRepository = (repo: Repository) => (
-    <div key={repo.id} className="bg-gray-800 border border-gray-700 rounded-lg shadow-lg flex flex-col min-w-full sm:min-w-0 h-[24rem]">
-      <div className="p-6 border-b border-gray-700 h-24">
-        <div className="flex items-center gap-4 h-full">
+    <div key={repo.id} className="bg-gray-800 border border-gray-700 rounded-lg shadow-lg flex flex-col min-w-full sm:min-w-0 h-[20rem] sm:h-[24rem]">
+      <div className="p-4 sm:p-6 border-b border-gray-700">
+        <div className="flex items-center gap-3 sm:gap-4">
           <img
             src={repo.owner.avatar_url}
             alt={repo.owner.login}
-            className="h-12 w-12 rounded-full border-2 border-blue-500 shadow-lg flex-shrink-0"
+            className="h-10 w-10 sm:h-12 sm:w-12 rounded-full border-2 border-blue-500 shadow-lg flex-shrink-0"
           />
-          <div className="flex flex-col justify-center overflow-hidden h-full">
-            <p className="text-blue-400 text-base mb-1 truncate">{repo.owner.login}</p>
-            <h3 className="text-lg font-bold text-white line-clamp-2 leading-tight">{repo.name}</h3>
+          <div className="flex flex-col justify-center overflow-hidden">
+            <p className="text-blue-400 text-sm sm:text-base mb-0.5 sm:mb-1 truncate">{repo.owner.login}</p>
+            <h3 className="text-base sm:text-lg font-bold text-white line-clamp-2 leading-tight">{repo.name}</h3>
           </div>
         </div>
       </div>
-      <div className="p-6 flex-1 flex flex-col">
-        <p className="text-base text-gray-300 mb-6 line-clamp-3 h-[4.5rem]">{repo.description || '此專案沒有描述'}</p>
-        <div className="mt-auto space-y-3">
+      <div className="p-4 sm:p-6 flex-1 flex flex-col">
+        <p className="text-sm sm:text-base text-gray-300 mb-4 sm:mb-6 line-clamp-3">{repo.description || '此專案沒有描述'}</p>
+        <div className="mt-auto space-y-2 sm:space-y-3">
           {repo.language && (
             <div className="flex items-center gap-2">
-              <span className={`w-2.5 h-2.5 rounded-full ${languageColors[repo.language] || 'bg-gray-700'}`}></span>
-              <span className="text-gray-300 text-sm">{repo.language}</span>
+              <span className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full ${languageColors[repo.language] || 'bg-gray-700'}`}></span>
+              <span className="text-gray-300 text-xs sm:text-sm">{repo.language}</span>
             </div>
           )}
-          <div className="flex flex-wrap gap-4 text-sm">
-            <span className="flex items-center gap-2">
-              <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="flex flex-wrap gap-3 sm:gap-4 text-xs sm:text-sm">
+            <span className="flex items-center gap-1.5 sm:gap-2">
+              <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
               </svg>
               <span className="text-blue-300">{repo.forks_count}</span>
             </span>
-            <span className="flex items-center gap-2">
-              <svg className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+            <span className="flex items-center gap-1.5 sm:gap-2">
+              <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
               </svg>
               <span className="text-yellow-300">{repo.stargazers_count}</span>
@@ -174,7 +174,7 @@ export default function Home() {
         href={repo.html_url}
         target="_blank"
         rel="noopener noreferrer"
-        className="block bg-gradient-to-r from-blue-600 to-blue-700 text-center py-3 rounded-b text-base font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-300"
+        className="block bg-gradient-to-r from-blue-600 to-blue-700 text-center py-2.5 sm:py-3 rounded-b text-sm sm:text-base font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-300"
       >
         查看專案
       </a>
