@@ -22,6 +22,26 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [timeRange, setTimeRange] = useState('month');
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(() => {
+    const saved = localStorage.getItem('itemsPerPage');
+    return saved ? parseInt(saved) : 12;
+  });
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('itemsPerPage', itemsPerPage.toString());
+  }, [itemsPerPage]);
 
   const fetchRepositories = async (query: string = '') => {
     try {
@@ -35,13 +55,11 @@ export default function Home() {
       }
       const dateString = format(date, 'yyyy-MM-dd');
 
-      let apiUrl = `https://api.github.com/search/repositories?sort=stars&order=desc&per_page=24`;
+      let apiUrl = `https://api.github.com/search/repositories?sort=stars&order=desc&per_page=32`;
 
       if (query) {
-        // 如果有搜尋關鍵字，使用關鍵字搜尋
         apiUrl += `&q=${encodeURIComponent(query)}`;
       } else {
-        // 如果沒有搜尋關鍵字，使用時間範圍搜尋
         apiUrl += `&q=created:>${dateString}`;
       }
 
@@ -49,6 +67,7 @@ export default function Home() {
       if (!response.ok) throw new Error('獲取資料失敗');
       const data = await response.json();
       setRepositories(data.items);
+      setCurrentPage(1); // 重置到第一頁
     } catch (err) {
       setError(err instanceof Error ? err.message : '發生錯誤');
     } finally {
@@ -56,19 +75,35 @@ export default function Home() {
     }
   };
 
-  // 當時間範圍改變時重新獲取資料
   useEffect(() => {
-    fetchRepositories(searchQuery);
+    if (searchQuery) {
+      fetchRepositories(searchQuery);
+    } else {
+      fetchRepositories();
+    }
   }, [timeRange]);
 
-  // 當搜尋關鍵字改變時重新獲取資料
-  useEffect(() => {
-    const debounceTimer = setTimeout(() => {
-      fetchRepositories(searchQuery);
-    }, 500); // 500ms 的防抖延遲
+  const handleSearch = () => {
+    setSearchQuery(searchInput);
+    fetchRepositories(searchInput);
+  };
 
-    return () => clearTimeout(debounceTimer);
-  }, [searchQuery]);
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  const handleItemsPerPageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setItemsPerPage(parseInt(e.target.value));
+    setCurrentPage(1);
+  };
+
+  // 計算分頁
+  const totalPages = Math.ceil(repositories.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentRepositories = repositories.slice(startIndex, endIndex);
 
   const languageColors: Record<string, string> = {
     JavaScript: 'bg-yellow-500',
@@ -116,20 +151,54 @@ export default function Home() {
               </button>
             ))}
           </div>
-          <div className="relative">
+          <div className="relative flex gap-2">
             <input
               type="text"
               placeholder="搜尋專案名稱、描述或作者..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyPress={handleKeyPress}
               className="w-full sm:w-96 px-4 py-2 rounded-md bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
             />
-            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button
+              onClick={handleSearch}
+              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
-            </div>
+              搜尋
+            </button>
           </div>
+        </div>
+
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center gap-2">
+            <span className="text-gray-400">每頁顯示：</span>
+            <select
+              value={itemsPerPage}
+              onChange={handleItemsPerPageChange}
+              className="bg-gray-800 border border-gray-700 text-white rounded-md px-3 py-1 focus:outline-none focus:border-blue-500"
+            >
+              {isMobile ? (
+                <>
+                  <option value="4">4 個</option>
+                  <option value="8">8 個</option>
+                  <option value="12">12 個</option>
+                </>
+              ) : (
+                <>
+                  <option value="8">8 個</option>
+                  <option value="12">12 個</option>
+                  <option value="16">16 個</option>
+                  <option value="24">24 個</option>
+                </>
+              )}
+            </select>
+          </div>
+          {/* <div className="text-gray-400">
+            共 {repositories.length} 個專案
+          </div> */}
         </div>
 
         {loading && (
@@ -147,7 +216,7 @@ export default function Home() {
 
         {!loading && !error && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {repositories.map((repo) => (
+            {currentRepositories.map((repo) => (
               <div key={repo.id} className="bg-gray-800 border border-gray-700 rounded-lg shadow-lg flex flex-col">
                 <div className="p-4 border-b border-gray-700">
                   <div className="flex items-center gap-3">
@@ -187,8 +256,30 @@ export default function Home() {
           </div>
         )}
 
+        {!loading && !error && repositories.length > 0 && (
+          <div className="flex justify-center items-center gap-2 mt-8">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              上一頁
+            </button>
+            <span className="text-gray-400">
+              第 {currentPage} 頁，共 {totalPages} 頁
+            </span>
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              下一頁
+            </button>
+          </div>
+        )}
+
         <footer className="mt-16 text-center text-sm text-gray-500">
-          使用 GitHub API 獲取資料 • 設計與開發 © {new Date().getFullYear()}
+          使用 GitHub API 獲取資料 • 老胖克設計與開發 © {new Date().getFullYear()}
         </footer>
       </div>
     </main>
