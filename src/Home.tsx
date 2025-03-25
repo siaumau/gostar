@@ -21,46 +21,54 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [timeRange, setTimeRange] = useState('month');
-  // const sliderRef = useRef<HTMLDivElement>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  // const slideLeft = () => {
-  //   if (sliderRef.current) {
-  //     sliderRef.current.scrollBy({ left: -300, behavior: 'smooth' });
-  //   }
-  // };
-
-  // const slideRight = () => {
-  //   if (sliderRef.current) {
-  //     sliderRef.current.scrollBy({ left: 300, behavior: 'smooth' });
-  //   }
-  // };
-
-  useEffect(() => {
-    const fetchTopRepositories = async () => {
-      try {
-        setLoading(true);
-        const date = new Date();
-        switch (timeRange) {
-          case 'day': date.setDate(date.getDate() - 1); break;
-          case 'week': date.setDate(date.getDate() - 7); break;
-          case 'month': date.setMonth(date.getMonth() - 1); break;
-          case 'year': date.setFullYear(date.getFullYear() - 1); break;
-        }
-        const dateString = format(date, 'yyyy-MM-dd');
-        const response = await fetch(
-          `https://api.github.com/search/repositories?q=created:>${dateString}&sort=stars&order=desc&per_page=10`
-        );
-        if (!response.ok) throw new Error('獲取資料失敗');
-        const data = await response.json();
-        setRepositories(data.items);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : '發生錯誤');
-      } finally {
-        setLoading(false);
+  const fetchRepositories = async (query: string = '') => {
+    try {
+      setLoading(true);
+      const date = new Date();
+      switch (timeRange) {
+        case 'day': date.setDate(date.getDate() - 1); break;
+        case 'week': date.setDate(date.getDate() - 7); break;
+        case 'month': date.setMonth(date.getMonth() - 1); break;
+        case 'year': date.setFullYear(date.getFullYear() - 1); break;
       }
-    };
-    fetchTopRepositories();
+      const dateString = format(date, 'yyyy-MM-dd');
+
+      let apiUrl = `https://api.github.com/search/repositories?sort=stars&order=desc&per_page=24`;
+
+      if (query) {
+        // 如果有搜尋關鍵字，使用關鍵字搜尋
+        apiUrl += `&q=${encodeURIComponent(query)}`;
+      } else {
+        // 如果沒有搜尋關鍵字，使用時間範圍搜尋
+        apiUrl += `&q=created:>${dateString}`;
+      }
+
+      const response = await fetch(apiUrl);
+      if (!response.ok) throw new Error('獲取資料失敗');
+      const data = await response.json();
+      setRepositories(data.items);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '發生錯誤');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 當時間範圍改變時重新獲取資料
+  useEffect(() => {
+    fetchRepositories(searchQuery);
   }, [timeRange]);
+
+  // 當搜尋關鍵字改變時重新獲取資料
+  useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+      fetchRepositories(searchQuery);
+    }, 500); // 500ms 的防抖延遲
+
+    return () => clearTimeout(debounceTimer);
+  }, [searchQuery]);
 
   const languageColors: Record<string, string> = {
     JavaScript: 'bg-yellow-500',
@@ -89,21 +97,39 @@ export default function Home() {
           <p className="text-gray-400 mt-4">探索 GitHub 最熱門的開源專案，掌握最新趨勢</p>
         </header>
 
-        <div className="flex justify-center gap-2 mb-10">
-          {['day', 'week', 'month', 'year'].map((range) => (
-            <button
-              key={range}
-              onClick={() => setTimeRange(range)}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-all border ${{
-                day: 'border-blue-500',
-                week: 'border-green-500',
-                month: 'border-purple-500',
-                year: 'border-orange-500',
-              }[range]} ${timeRange === range ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}
-            >
-              {range === 'day' ? '今日' : range === 'week' ? '本週' : range === 'month' ? '本月' : '今年'}
-            </button>
-          ))}
+        <div className="flex flex-col sm:flex-row justify-center gap-4 mb-10">
+          <div className="flex justify-center gap-2">
+            {['day', 'week', 'month', 'year'].map((range) => (
+              <button
+                key={range}
+                onClick={() => setTimeRange(range)}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-all border ${
+                  {
+                    day: 'border-blue-500',
+                    week: 'border-green-500',
+                    month: 'border-purple-500',
+                    year: 'border-orange-500',
+                  }[range]
+                } ${timeRange === range ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}
+              >
+                {range === 'day' ? '今日' : range === 'week' ? '本週' : range === 'month' ? '本月' : '今年'}
+              </button>
+            ))}
+          </div>
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="搜尋專案名稱、描述或作者..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full sm:w-96 px-4 py-2 rounded-md bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+            />
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+          </div>
         </div>
 
         {loading && (
@@ -152,6 +178,12 @@ export default function Home() {
                 </a>
               </div>
             ))}
+          </div>
+        )}
+
+        {!loading && !error && repositories.length === 0 && (
+          <div className="text-center text-gray-400 py-10">
+            <p>沒有找到符合搜尋條件的專案</p>
           </div>
         )}
 
