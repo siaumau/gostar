@@ -185,10 +185,10 @@ export default function Home() {
     <main className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white py-10 px-4">
       <div className="max-w-7xl mx-auto">
         <header className="text-center mb-12">
-          <h1 className="text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500 mb-4">
+          <h1 className="text-3xl sm:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500 mb-2 sm:mb-4 leading-tight">
             GitHub 趨勢排行
           </h1>
-          <p className="text-xl text-gray-400">探索 GitHub 最熱門的開源專案，掌握最新趨勢</p>
+          <p className="text-base sm:text-xl text-gray-400 px-4">探索 GitHub 最熱門的開源專案</p>
         </header>
 
         <div className="flex flex-col sm:flex-row justify-center gap-4 mb-10">
@@ -197,7 +197,7 @@ export default function Home() {
               <button
                 key={range}
                 onClick={() => setTimeRange(range)}
-                className={`px-6 py-3 rounded-lg text-base font-medium transition-all border-2 ${
+                className={`px-4 sm:px-6 py-3 rounded-lg text-base font-medium transition-all border-2 ${
                   {
                     day: 'border-blue-500 hover:bg-blue-500/20',
                     week: 'border-green-500 hover:bg-green-500/20',
@@ -221,23 +221,24 @@ export default function Home() {
               </button>
             ))}
           </div>
-          <div className="flex w-full sm:w-auto">
+          <div className="flex w-full max-w-full">
             <input
               type="text"
               placeholder="搜尋專案名稱、描述或作者..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               onKeyPress={handleKeyPress}
-              className="flex-1 px-4 sm:px-6 py-3 rounded-l-lg bg-gray-800/50 border-2 border-r-0 border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 text-base sm:text-lg"
+              className="flex-1 min-w-0 px-3 sm:px-6 py-3 rounded-l-lg bg-gray-800/50 border-2 border-r-0 border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 text-sm sm:text-base"
             />
             <button
               onClick={handleSearch}
-              className="px-3 sm:px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-r-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 flex items-center gap-2 text-base sm:text-lg font-medium border-2 border-l-0 border-transparent"
+              className="px-3 sm:px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-r-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 flex items-center justify-center border-2 border-l-0 border-transparent"
+              style={{ minWidth: '44px' }}
             >
               <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
-              <span className="hidden sm:inline">搜尋</span>
+              <span className="hidden sm:inline ml-2">搜尋</span>
             </button>
           </div>
         </div>
