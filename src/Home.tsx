@@ -188,7 +188,7 @@ export default function Home() {
           <h1 className="text-3xl sm:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500 mb-2 sm:mb-4 leading-tight">
             GitHub 趨勢排行
           </h1>
-          <p className="text-base sm:text-xl text-gray-400 px-4">探索 GitHub 最熱門的開源專案</p>
+          <p className="text-base sm:text-xl text-gray-400 px-4">探索 GitHub 最熱門的開源專案.</p>
         </header>
 
         <div className="flex flex-col sm:flex-row justify-center gap-4 mb-10">
