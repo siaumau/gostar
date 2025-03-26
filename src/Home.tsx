@@ -85,11 +85,12 @@ export default function Home() {
   }, [timeRange]);
 
   const handleSearch = () => {
-    setSearchQuery(searchInput);
-    fetchRepositories(searchInput);
+    if (searchInput.trim()) {
+      setSearchQuery(searchInput);
+    }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleSearch();
     }
@@ -248,7 +249,7 @@ export default function Home() {
             <span className="text-gray-400 text-sm">每頁顯示：</span>
             <select
               value={itemsPerPage}
-              onChange={(e) => setItemsPerPage(Number(e.target.value))}
+              onChange={handleItemsPerPageChange}
               className="bg-gray-800/50 backdrop-blur-sm border-2 border-gray-700/50 rounded-lg px-2 py-1 text-sm text-white focus:outline-none focus:border-blue-500/50"
             >
               <option value="12">12</option>
